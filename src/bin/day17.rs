@@ -70,39 +70,39 @@ enum RockShape {
 }
 
 impl RockShape {
-    fn deltas(self) -> &'static Vec<Coordinate> {
+    fn deltas(self) -> &'static Vec<Point> {
         lazy_static! {
-            static ref HORIZONTAL_BAR_DELTAS: Vec<Coordinate> = vec![
-                Coordinate::new(0, 0),
-                Coordinate::new(1, 0),
-                Coordinate::new(2, 0),
-                Coordinate::new(3, 0),
+            static ref HORIZONTAL_BAR_DELTAS: Vec<Point> = vec![
+                Point::new(0, 0),
+                Point::new(1, 0),
+                Point::new(2, 0),
+                Point::new(3, 0),
             ];
-            static ref CROSS_DELTAS: Vec<Coordinate> = vec![
-                Coordinate::new(1, 0),
-                Coordinate::new(0, -1),
-                Coordinate::new(1, -1),
-                Coordinate::new(2, -1),
-                Coordinate::new(1, -2),
+            static ref CROSS_DELTAS: Vec<Point> = vec![
+                Point::new(1, 0),
+                Point::new(0, -1),
+                Point::new(1, -1),
+                Point::new(2, -1),
+                Point::new(1, -2),
             ];
-            static ref HOCKEY_STICK_DELTAS: Vec<Coordinate> = vec![
-                Coordinate::new(2, 0),
-                Coordinate::new(2, -1),
-                Coordinate::new(2, -2),
-                Coordinate::new(1, -2),
-                Coordinate::new(0, -2),
+            static ref HOCKEY_STICK_DELTAS: Vec<Point> = vec![
+                Point::new(2, 0),
+                Point::new(2, -1),
+                Point::new(2, -2),
+                Point::new(1, -2),
+                Point::new(0, -2),
             ];
-            static ref VERTICAL_BAR_DELTAS: Vec<Coordinate> = vec![
-                Coordinate::new(0, 0),
-                Coordinate::new(0, -1),
-                Coordinate::new(0, -2),
-                Coordinate::new(0, -3),
+            static ref VERTICAL_BAR_DELTAS: Vec<Point> = vec![
+                Point::new(0, 0),
+                Point::new(0, -1),
+                Point::new(0, -2),
+                Point::new(0, -3),
             ];
-            static ref SQUARE_DELTAS: Vec<Coordinate> = vec![
-                Coordinate::new(0, 0),
-                Coordinate::new(1, 0),
-                Coordinate::new(0, -1),
-                Coordinate::new(1, -1),
+            static ref SQUARE_DELTAS: Vec<Point> = vec![
+                Point::new(0, 0),
+                Point::new(1, 0),
+                Point::new(0, -1),
+                Point::new(1, -1),
             ];
         }
         match self {
@@ -127,29 +127,29 @@ impl RockShape {
 
 struct Rock {
     rock_shape: RockShape,
-    top_left: Coordinate,
-    coordinates: Vec<Coordinate>,
+    top_left: Point,
+    points: Vec<Point>,
 }
 
 impl Rock {
-    fn new(rock_shape: RockShape, top_left: Coordinate) -> Rock {
+    fn new(rock_shape: RockShape, top_left: Point) -> Rock {
         Rock {
             rock_shape,
             top_left,
-            coordinates: rock_shape.deltas().iter().map(|d| &top_left + d).collect(),
+            points: rock_shape.deltas().iter().map(|d| &top_left + d).collect(),
         }
     }
 
     fn push(&self, push: Push) -> Rock {
         let new_top_left = match push {
-            Push::Left => Coordinate::new(self.top_left.x - 1, self.top_left.y),
-            Push::Right => Coordinate::new(self.top_left.x + 1, self.top_left.y),
+            Push::Left => Point::new(self.top_left.x - 1, self.top_left.y),
+            Push::Right => Point::new(self.top_left.x + 1, self.top_left.y),
         };
         Rock::new(self.rock_shape, new_top_left)
     }
 
     fn push_down(&self) -> Rock {
-        let new_top_left = Coordinate::new(self.top_left.x, self.top_left.y - 1);
+        let new_top_left = Point::new(self.top_left.x, self.top_left.y - 1);
         Rock::new(self.rock_shape, new_top_left)
     }
 }
@@ -195,22 +195,22 @@ impl Iterator for RockShapesEndlessIterator {
 }
 
 #[derive(Clone, Copy)]
-struct Coordinate {
+struct Point {
     x: i64,
     y: i64,
 }
 
-impl Coordinate {
-    fn new(x: i64, y: i64) -> Coordinate {
-        Coordinate { x, y }
+impl Point {
+    fn new(x: i64, y: i64) -> Point {
+        Point { x, y }
     }
 }
 
-impl Add<&Coordinate> for &Coordinate {
-    type Output = Coordinate;
+impl Add<&Point> for &Point {
+    type Output = Point;
 
-    fn add(self, rhs: &Coordinate) -> Self::Output {
-        Coordinate {
+    fn add(self, rhs: &Point) -> Self::Output {
+        Point {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
         }
@@ -319,8 +319,8 @@ impl TopEdge {
         self.place(&current_rock);
     }
 
-    fn start(&self, shape: RockShape) -> Coordinate {
-        Coordinate::new(2, (self.height() + 2 + shape.height() as usize) as i64)
+    fn start(&self, shape: RockShape) -> Point {
+        Point::new(2, (self.height() + 2 + shape.height() as usize) as i64)
     }
 
     fn height(&self) -> usize {
@@ -331,15 +331,15 @@ impl TopEdge {
     }
 
     fn valid_placement(&self, rock: &Rock) -> bool {
-        rock.coordinates.iter().all(|c| self.valid_coordinate(c))
+        rock.points.iter().all(|c| self.valid_point(c))
     }
 
-    fn valid_coordinate(&self, coordinate: &Coordinate) -> bool {
-        if coordinate.x < 0 || coordinate.y < 0 {
+    fn valid_point(&self, point: &Point) -> bool {
+        if point.x < 0 || point.y < 0 {
             return false;
         }
-        let x = coordinate.x as usize;
-        let y = coordinate.y as usize;
+        let x = point.x as usize;
+        let y = point.y as usize;
         if x >= WIDTH || y < self.base_heights[x] {
             return false;
         };
@@ -348,9 +348,9 @@ impl TopEdge {
     }
 
     fn place(&mut self, rock: &Rock) {
-        for coordinate in rock.coordinates.iter() {
-            let x = coordinate.x as usize;
-            let y_in_terrain = coordinate.y as usize - self.base_heights[x];
+        for point in rock.points.iter() {
+            let x = point.x as usize;
+            let y_in_terrain = point.y as usize - self.base_heights[x];
 
             while self.holes_above_base[x].len() <= y_in_terrain {
                 self.holes_above_base[x].push_back(true);
@@ -457,7 +457,7 @@ impl TopEdge {
 
 #[cfg(test)]
 mod tests {
-    use crate::{calculate_height_after_rocks, parse_push, Coordinate, Rock, RockShape, TopEdge};
+    use crate::{calculate_height_after_rocks, parse_push, Point, Rock, RockShape, TopEdge};
     use std::collections::VecDeque;
 
     #[test]
@@ -474,7 +474,7 @@ mod tests {
     #[test]
     fn test_placement_to_top_edge() {
         let mut top_edge = TopEdge::new();
-        top_edge.place(&Rock::new(RockShape::Cross, Coordinate::new(1, 2)));
+        top_edge.place(&Rock::new(RockShape::Cross, Point::new(1, 2)));
 
         assert_eq!(
             TopEdge {
@@ -492,7 +492,7 @@ mod tests {
             top_edge,
         );
 
-        top_edge.place(&Rock::new(RockShape::HockeyStick, Coordinate::new(3, 2)));
+        top_edge.place(&Rock::new(RockShape::HockeyStick, Point::new(3, 2)));
         assert_eq!(
             TopEdge {
                 base_heights: [0, 0, 3, 2, 1, 3, 0],

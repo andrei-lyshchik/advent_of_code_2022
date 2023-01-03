@@ -19,28 +19,28 @@ fn main() {
         "Part 1: {:?}",
         positions_not_containing_beacons_at_y(&observations, 2000000)
     );
-    let coordinates_possibly_containing_beacon =
-        coordinates_possibly_containing_beacon(&observations, 0..=4000000, 0..=4000000);
-    if coordinates_possibly_containing_beacon.len() == 1 {
+    let points_possibly_containing_beacon =
+        points_possibly_containing_beacon(&observations, 0..=4000000, 0..=4000000);
+    if points_possibly_containing_beacon.len() == 1 {
         println!(
             "Part 2: {}",
-            coordinates_possibly_containing_beacon[0].tuning_frequency()
+            points_possibly_containing_beacon[0].tuning_frequency()
         );
     } else {
         println!(
-            "Unable to find only a single coordinate possibly containing beacon, found: {:?}",
-            coordinates_possibly_containing_beacon
+            "Unable to find only a single point possibly containing beacon, found: {:?}",
+            points_possibly_containing_beacon
         );
     }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-struct Coordinate {
+struct Point {
     x: i32,
     y: i32,
 }
 
-impl Coordinate {
+impl Point {
     fn manhattan_distance(self: &Self, other: &Self) -> i32 {
         (self.x - other.x).abs() + (self.y - other.y).abs()
     }
@@ -52,8 +52,8 @@ impl Coordinate {
 
 #[derive(Debug)]
 struct Observation {
-    sensor_at: Coordinate,
-    closest_beacon_at: Coordinate,
+    sensor_at: Point,
+    closest_beacon_at: Point,
 }
 
 impl FromStr for Observation {
@@ -80,11 +80,11 @@ impl FromStr for Observation {
                         Ok(closest_beacon_at_x),
                         Ok(closest_beacon_at_y),
                     ) => Some(Observation {
-                        sensor_at: Coordinate {
+                        sensor_at: Point {
                             x: sensor_at_x,
                             y: sensor_at_y,
                         },
-                        closest_beacon_at: Coordinate {
+                        closest_beacon_at: Point {
                             x: closest_beacon_at_x,
                             y: closest_beacon_at_y,
                         },
@@ -181,11 +181,11 @@ fn positions_not_containing_beacons_at_y(observations: &[Observation], y: i32) -
     result
 }
 
-fn coordinates_possibly_containing_beacon(
+fn points_possibly_containing_beacon(
     observations: &[Observation],
     x_range_to_try: RangeInclusive<i32>,
     y_range_to_try: RangeInclusive<i32>,
-) -> Vec<Coordinate> {
+) -> Vec<Point> {
     let mut result = vec![];
     for y in y_range_to_try {
         let observed_x_ranges_at_y = disjoint_observed_x_ranges_at_y(observations, y);
@@ -195,7 +195,7 @@ fn coordinates_possibly_containing_beacon(
                 break;
             }
             for x in current_x..*range.start() {
-                result.push(Coordinate { x, y });
+                result.push(Point { x, y });
             }
             current_x = range.end() + 1;
         }
@@ -207,15 +207,15 @@ fn coordinates_possibly_containing_beacon(
 #[cfg(test)]
 mod tests {
     use crate::{
-        coordinates_possibly_containing_beacon, positions_not_containing_beacons_at_y,
-        to_disjoint_ranges, Coordinate, Observation,
+        points_possibly_containing_beacon, positions_not_containing_beacons_at_y,
+        to_disjoint_ranges, Observation, Point,
     };
 
     #[test]
     fn test_observed_range_at_y() {
         let observation = Observation {
-            sensor_at: Coordinate { x: 8, y: 7 },
-            closest_beacon_at: Coordinate { x: 2, y: 10 },
+            sensor_at: Point { x: 8, y: 7 },
+            closest_beacon_at: Point { x: 2, y: 10 },
         };
         assert_eq!(Some(1..=15), observation.observed_x_range_at_y(9));
         assert_eq!(Some(5..=11), observation.observed_x_range_at_y(1));
@@ -277,8 +277,8 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            vec![Coordinate { x: 14, y: 11 }],
-            coordinates_possibly_containing_beacon(&observations, 0..=20, 0..=20)
+            vec![Point { x: 14, y: 11 }],
+            points_possibly_containing_beacon(&observations, 0..=20, 0..=20)
         );
     }
 }

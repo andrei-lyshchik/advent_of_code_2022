@@ -6,7 +6,7 @@ use aoc2022::input::read_lines;
 extern crate lazy_static;
 
 lazy_static! {
-    static ref SAND_SOURCE: Coordinate = Coordinate { x: 500, y: 0 };
+    static ref SAND_SOURCE: Point = Point { x: 500, y: 0 };
 }
 
 fn main() {
@@ -14,9 +14,9 @@ fn main() {
         .map(|l| parse_rock_turns(&l))
         .collect::<Result<Vec<_>, String>>()
     {
-        Ok(coordinates) => coordinates,
+        Ok(points) => points,
         Err(err) => {
-            println!("Couldn't parse coordinates: {}", err);
+            println!("Couldn't parse points: {}", err);
             return;
         }
     };
@@ -34,47 +34,47 @@ fn main() {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-struct Coordinate {
+struct Point {
     x: i32,
     y: i32,
 }
 
-impl Coordinate {
-    fn down(self: &Self) -> Coordinate {
-        Coordinate {
+impl Point {
+    fn down(self: &Self) -> Point {
+        Point {
             x: self.x,
             y: self.y + 1,
         }
     }
 
-    fn down_and_left(self: &Self) -> Coordinate {
-        Coordinate {
+    fn down_and_left(self: &Self) -> Point {
+        Point {
             x: self.x - 1,
             y: self.y + 1,
         }
     }
 
-    fn down_and_right(self: &Self) -> Coordinate {
-        Coordinate {
+    fn down_and_right(self: &Self) -> Point {
+        Point {
             x: self.x + 1,
             y: self.y + 1,
         }
     }
 }
 
-fn parse_rock_turns(line: &str) -> Result<Vec<Coordinate>, String> {
+fn parse_rock_turns(line: &str) -> Result<Vec<Point>, String> {
     let mut result = Vec::new();
 
-    for coordinate_str in line.split(" -> ") {
-        let mut coordinate_split = coordinate_str.split(',');
-        let coordinate = match (
-            coordinate_split.next().map(|s| s.parse()),
-            coordinate_split.next().map(|s| s.parse()),
+    for point_str in line.split(" -> ") {
+        let mut point_split = point_str.split(',');
+        let point = match (
+            point_split.next().map(|s| s.parse()),
+            point_split.next().map(|s| s.parse()),
         ) {
-            (Some(Ok(x)), Some(Ok(y))) => Coordinate { x, y },
-            _ => return Err(format!("Couldn't parse coordinate from {}", coordinate_str)),
+            (Some(Ok(x)), Some(Ok(y))) => Point { x, y },
+            _ => return Err(format!("Couldn't parse point from {}", point_str)),
         };
-        result.push(coordinate);
+        result.push(point);
     }
 
     Ok(result)
@@ -82,13 +82,13 @@ fn parse_rock_turns(line: &str) -> Result<Vec<Coordinate>, String> {
 
 #[derive(Debug)]
 struct Map {
-    rocks_coordinates: HashSet<Coordinate>,
+    rocks_points: HashSet<Point>,
     rocks_x_range: RangeInclusive<i32>,
     floor: i32,
 }
 
 impl Map {
-    fn new(rocks_turns: &Vec<Vec<Coordinate>>) -> Result<Map, String> {
+    fn new(rocks_turns: &Vec<Vec<Point>>) -> Result<Map, String> {
         if rocks_turns.is_empty() || rocks_turns[0].is_empty() {
             return Err("Can't parse map without rocks".to_owned());
         }
@@ -111,11 +111,11 @@ impl Map {
                 rocks_y_max = rocks_y_max.max(line_y_max);
                 if line[0].x == line[1].x {
                     for y in line_y_min..=line_y_max {
-                        rocks.insert(Coordinate { x: line[0].x, y });
+                        rocks.insert(Point { x: line[0].x, y });
                     }
                 } else if line[0].y == line[1].y {
                     for x in line_x_min..=line_x_max {
-                        rocks.insert(Coordinate { x, y: line[0].y });
+                        rocks.insert(Point { x, y: line[0].y });
                     }
                 } else {
                     return Err(format!(
@@ -127,14 +127,14 @@ impl Map {
         }
 
         Ok(Map {
-            rocks_coordinates: rocks,
+            rocks_points: rocks,
             rocks_x_range: rocks_x_min..=rocks_x_max,
             floor: rocks_y_max + 2,
         })
     }
 
     fn sand_units_until_escape_from_rocks(self: &Self) -> usize {
-        let mut rest_sand: HashSet<Coordinate> = HashSet::new();
+        let mut rest_sand: HashSet<Point> = HashSet::new();
 
         loop {
             let mut current = SAND_SOURCE.clone();
@@ -163,18 +163,16 @@ impl Map {
         }
     }
 
-    fn escaped_from_rocks(self: &Self, coordinate: &Coordinate) -> bool {
-        !self.rocks_x_range.contains(&coordinate.x)
+    fn escaped_from_rocks(self: &Self, point: &Point) -> bool {
+        !self.rocks_x_range.contains(&point.x)
     }
 
-    fn blocked(self: &Self, rest_sand: &HashSet<Coordinate>, coordinate: &Coordinate) -> bool {
-        self.rocks_coordinates.contains(coordinate)
-            || rest_sand.contains(coordinate)
-            || coordinate.y >= self.floor
+    fn blocked(self: &Self, rest_sand: &HashSet<Point>, point: &Point) -> bool {
+        self.rocks_points.contains(point) || rest_sand.contains(point) || point.y >= self.floor
     }
 
     fn sand_units_until_source_blocked(self: &Self) -> usize {
-        let mut rest_sand: HashSet<Coordinate> = HashSet::new();
+        let mut rest_sand: HashSet<Point> = HashSet::new();
 
         while !self.blocked(&rest_sand, &*SAND_SOURCE) {
             let mut current = SAND_SOURCE.clone();
