@@ -177,23 +177,6 @@ impl RockShapesEndlessIterator {
     }
 }
 
-impl Iterator for RockShapesEndlessIterator {
-    type Item = RockShape;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let result = match self.i {
-            0 => RockShape::HorizontalBar,
-            1 => RockShape::Cross,
-            2 => RockShape::HockeyStick,
-            3 => RockShape::VerticalBar,
-            4 => RockShape::Square,
-            _ => panic!("Illegal constructed value of i: {}", self.i),
-        };
-        self.i = (self.i + 1) % 5;
-        Some(result)
-    }
-}
-
 #[derive(Clone, Copy)]
 struct Point {
     x: i64,
